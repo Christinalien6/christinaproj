@@ -68,6 +68,14 @@
     animation: bob 1.8s ease-in-out infinite;
   }
 
+  #fish {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    height: 25%;
+    z-index: 2;
+  }
+
   #door {
     right: 8%;
     bottom: 5%;
@@ -176,6 +184,7 @@
   <img id="diatom-guy" class="sprite" src="assets/diatom-guy.png" alt="diatom guy">
   <img id="diatom-guy-with-hat" class="sprite" src="assets/diatom-guy-with-hat.png" alt="diatom guy with hat">
   <img id="hat" class="sprite" src="assets/hat.png" alt="hat">
+  <img id="fish" class="sprite" src="assets/fish.png" alt="fish">
   <img id="door" class="sprite" src="assets/door.png" alt="door">
 
   <!-- Scene 2 elements -->
@@ -192,6 +201,7 @@
   const diatomGuy = document.getElementById('diatom-guy');
   const diatomGuyHat = document.getElementById('diatom-guy-with-hat');
   const hat = document.getElementById('hat');
+  const fish = document.getElementById('fish');
   const door = document.getElementById('door');
   const house = document.getElementById('house');
   const diatomScene2 = document.getElementById('diatom-guy-scene2');
@@ -282,6 +292,7 @@
     bg.style.opacity = '0';
     diatomGuyHat.style.display = 'none';
     door.style.display = 'none';
+    fish.style.display = 'none';
 
     setTimeout(function() {
       bg.style.display = 'none';
