@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diatom Guy Adventure</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    overflow: hidden;
+    background: #000;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #game {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+
+  .sprite {
+    position: absolute;
+    z-index: 1;
+    image-rendering: auto;
+  }
+
+  /* --- Scene 1 sprites --- */
+
+  #diatom-guy {
+    left: 8%;
+    bottom: 5%;
+    height: 55%;
+    z-index: 2;
+  }
+
+  #diatom-guy-with-hat {
+    left: 8%;
+    bottom: 5%;
+    height: 55%;
+    z-index: 2;
+    display: none;
+    cursor: grab;
+  }
+
+  #hat {
+    left: 12%;
+    bottom: 48%;
+    height: 18%;
+    z-index: 3;
+    cursor: pointer;
+    animation: bob 1.8s ease-in-out infinite;
+  }
+
+  #door {
+    right: 8%;
+    bottom: 5%;
+    height: 60%;
+    z-index: 1;
+    display: none;
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  /* --- Scene 2 sprites --- */
+
+  #house {
+    left: 5%;
+    bottom: 8%;
+    height: 70%;
+    z-index: 1;
+    display: none;
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  #diatom-guy-scene2 {
+    left: 18%;
+    bottom: 8%;
+    height: 45%;
+    z-index: 2;
+    display: none;
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  #car {
+    left: 50%;
+    bottom: 3%;
+    height: 30%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: none;
+    cursor: pointer;
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  #car-with-driver {
+    left: 50%;
+    bottom: 3%;
+    height: 30%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: none;
+  }
+
+  /* --- Animations --- */
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-14px); }
+  }
+
+  @keyframes bobCharacter {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(-50%) rotate(0deg); }
+    20% { transform: translateX(-50%) rotate(-1.5deg); }
+    40% { transform: translateX(-50%) rotate(1.5deg); }
+    60% { transform: translateX(-50%) rotate(-1deg); }
+    80% { transform: translateX(-50%) rotate(1deg); }
+  }
+
+  @keyframes driveOff {
+    0% { left: 50%; opacity: 1; }
+    100% { left: 110%; opacity: 1; }
+  }
+
+  .bobbing {
+    animation: bobCharacter 1.8s ease-in-out infinite;
+  }
+
+  .shaking {
+    animation: shake 0.15s ease-in-out infinite;
+  }
+
+  .driving-off {
+    animation: driveOff 1.5s ease-in forwards;
+  }
+
+  /* Dragging state */
+  .dragging {
+    cursor: grabbing !important;
+    animation: none !important;
+    z-index: 100 !important;
+  }
+</style>
+</head>
+<body>
+<div id="game">
+  <!-- Background -->
+  <img id="background" src="assets/inside-scene2.jpg" alt="background">
+
+  <!-- Scene 1 elements -->
+  <img id="diatom-guy" class="sprite" src="assets/diatom-guy.png" alt="diatom guy">
+  <img id="diatom-guy-with-hat" class="sprite" src="assets/diatom-guy-with-hat.png" alt="diatom guy with hat">
+  <img id="hat" class="sprite" src="assets/hat.png" alt="hat">
+  <img id="door" class="sprite" src="assets/door.png" alt="door">
+
+  <!-- Scene 2 elements -->
+  <img id="house" class="sprite" src="assets/house.png" alt="house">
+  <img id="diatom-guy-scene2" class="sprite" src="assets/diatom-guy-with-hat.png" alt="diatom guy with hat">
+  <img id="car" class="sprite" src="assets/car.png" alt="car">
+  <img id="car-with-driver" class="sprite" src="assets/car-with-driver.png" alt="car with driver">
+</div>
+
+<script>
+(function() {
+  // Element references
+  const bg = document.getElementById('background');
+  const diatomGuy = document.getElementById('diatom-guy');
+  const diatomGuyHat = document.getElementById('diatom-guy-with-hat');
+  const hat = document.getElementById('hat');
+  const door = document.getElementById('door');
+  const house = document.getElementById('house');
+  const diatomScene2 = document.getElementById('diatom-guy-scene2');
+  const car = document.getElementById('car');
+  const carDriver = document.getElementById('car-with-driver');
+
+  // =====================
+  // SCENE 1: Hat click
+  // =====================
+  hat.addEventListener('click', function() {
+    // Hide the plain diatom-guy and the hat
+    diatomGuy.style.display = 'none';
+    hat.style.display = 'none';
+
+    // Show diatom-guy-with-hat, start bobbing
+    diatomGuyHat.style.display = 'block';
+    diatomGuyHat.classList.add('bobbing');
+
+    // Show the door
+    door.style.display = 'block';
+  });
+
+  // =====================
+  // SCENE 1: Drag diatom-guy-with-hat to door
+  // =====================
+  let isDragging = false;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+
+  function getClientPos(e) {
+    if (e.touches) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function onDragStart(e) {
+    if (diatomGuyHat.style.display === 'none') return;
+    e.preventDefault();
+    isDragging = true;
+    const pos = getClientPos(e);
+    const rect = diatomGuyHat.getBoundingClientRect();
+    dragOffsetX = pos.x - rect.left;
+    dragOffsetY = pos.y - rect.top;
+    diatomGuyHat.classList.add('dragging');
+  }
+
+  function onDragMove(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const pos = getClientPos(e);
+    diatomGuyHat.style.left = (pos.x - dragOffsetX) + 'px';
+    diatomGuyHat.style.top = (pos.y - dragOffsetY) + 'px';
+    diatomGuyHat.style.bottom = 'auto';
+  }
+
+  function onDragEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    diatomGuyHat.classList.remove('dragging');
+    diatomGuyHat.classList.add('bobbing');
+
+    // Check overlap with door
+    const guyRect = diatomGuyHat.getBoundingClientRect();
+    const doorRect = door.getBoundingClientRect();
+
+    const overlapX = Math.max(0, Math.min(guyRect.right, doorRect.right) - Math.max(guyRect.left, doorRect.left));
+    const overlapY = Math.max(0, Math.min(guyRect.bottom, doorRect.bottom) - Math.max(guyRect.top, doorRect.top));
+    const overlapArea = overlapX * overlapY;
+    const guyArea = guyRect.width * guyRect.height;
+
+    if (overlapArea > guyArea * 0.15) {
+      startScene2();
+    }
+  }
+
+  diatomGuyHat.addEventListener('mousedown', onDragStart);
+  diatomGuyHat.addEventListener('touchstart', onDragStart);
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('touchmove', onDragMove, { passive: false });
+  document.addEventListener('mouseup', onDragEnd);
+  document.addEventListener('touchend', onDragEnd);
+
+  // =====================
+  // SCENE 2
+  // =====================
+  function startScene2() {
+    // Hide all Scene 1 elements
+    bg.style.transition = 'opacity 0.5s';
+    bg.style.opacity = '0';
+    diatomGuyHat.style.display = 'none';
+    door.style.display = 'none';
+
+    setTimeout(function() {
+      bg.style.display = 'none';
+
+      // Show Scene 2 elements
+      house.style.display = 'block';
+      diatomScene2.style.display = 'block';
+      car.style.display = 'block';
+
+      // Change background color to sky
+      document.body.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #E0F0FF 60%, #90C060 60%, #5A8A30 100%)';
+    }, 500);
+  }
+
+  // =====================
+  // SCENE 2: Car click
+  // =====================
+  car.addEventListener('click', function() {
+    // Hide diatom-guy in front of house
+    diatomScene2.style.transition = 'opacity 0.3s';
+    diatomScene2.style.opacity = '0';
+    setTimeout(function() {
+      diatomScene2.style.display = 'none';
+    }, 300);
+
+    // Replace car with car-with-driver
+    car.style.display = 'none';
+    carDriver.style.display = 'block';
+
+    // Shake for 1 second, then drive off
+    carDriver.classList.add('shaking');
+
+    setTimeout(function() {
+      carDriver.classList.remove('shaking');
+      carDriver.classList.add('driving-off');
+    }, 1000);
+  });
+})();
+</script>
+</body>
+</html>
