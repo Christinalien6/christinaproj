@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bridge Builder</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    overflow: hidden;
+    background: #1a1a2e;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+  }
+
+  #game-container {
+    position: relative;
+    width: 900px;
+    height: 500px;
+    margin: 40px auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+  }
+
+  #background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transition: filter 0.8s ease;
+  }
+
+  #left-cliff {
+    position: absolute;
+    bottom: 60px;
+    left: 0;
+    width: 300px;
+    height: 400px;
+    z-index: 2;
+  }
+
+  #right-cliff {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    width: 300px;
+    height: 400px;
+    z-index: 2;
+  }
+
+  #character {
+    position: absolute;
+    width: 60px;
+    height: 75px;
+    z-index: 5;
+    transition: transform 0.3s ease;
+  }
+
+  #bridge-container {
+    position: absolute;
+    bottom: 162px;
+    left: 248px;
+    width: 404px;
+    height: 24px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .plank {
+    width: 40px;
+    height: 20px;
+    flex-shrink: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .plank.placed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  #prompt-text {
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 300;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+
+  #plank-counter {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ddd;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+
+  #final-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-shadow: 0 3px 12px rgba(0, 0, 0, 0.6);
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    pointer-events: none;
+    text-align: center;
+  }
+
+  #reset-btn {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 30px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.5s ease, background 0.3s ease;
+    pointer-events: none;
+  }
+
+  #reset-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  #bridge-complete-text {
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #90ee90;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+
+  /* Confetti for Scene2 */
+  .confetti {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    z-index: 8;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  @keyframes confetti-fall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(500px) rotate(720deg); opacity: 0; }
+  }
+
+  /* Rope rails */
+  .rope {
+    position: absolute;
+    bottom: 178px;
+    left: 248px;
+    width: 404px;
+    height: 2px;
+    background: #8B6914;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .rope.top-rope {
+    bottom: 185px;
+  }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+  <img id="background" src="assets/background.png" alt="background">
+  <img id="left-cliff" src="assets/left-cliff.png" alt="left cliff">
+  <img id="right-cliff" src="assets/right-cliff.png" alt="right cliff">
+  <img id="character" src="assets/character.png" alt="character">
+
+  <div class="rope top-rope" id="rope-top"></div>
+  <div class="rope" id="rope-bottom"></div>
+  <div id="bridge-container"></div>
+
+  <div id="prompt-text">Click to build</div>
+  <div id="plank-counter"></div>
+  <div id="bridge-complete-text">Bridge complete!</div>
+  <div id="final-message">Connection requires action.</div>
+
+  <button id="reset-btn">Reset</button>
+</div>
+
+<script>
+(function() {
+  const TOTAL_PLANKS = 10;
+  const BRIDGE_LEFT = 248;
+  const BRIDGE_RIGHT = 652;
+  const CLIFF_TOP_Y = 110; // character standing Y on cliff (from bottom)
+  const CHAR_WIDTH = 60;
+  const CHAR_HEIGHT = 75;
+
+  let plankCount = 0;
+  let scene = "scene1";
+  let bridgeComplete = false;
+  let walking = false;
+  let gameOver = false;
+
+  const container = document.getElementById("game-container");
+  const character = document.getElementById("character");
+  const bridgeContainer = document.getElementById("bridge-container");
+  const promptText = document.getElementById("prompt-text");
+  const plankCounter = document.getElementById("plank-counter");
+  const bridgeCompleteText = document.getElementById("bridge-complete-text");
+  const finalMessage = document.getElementById("final-message");
+  const resetBtn = document.getElementById("reset-btn");
+  const bg = document.getElementById("background");
+  const ropeTop = document.getElementById("rope-top");
+  const ropeBottom = document.getElementById("rope-bottom");
+
+  function initScene1() {
+    plankCount = 0;
+    scene = "scene1";
+    bridgeComplete = false;
+    walking = false;
+    gameOver = false;
+
+    // Position character on left cliff
+    character.style.left = "195px";
+    character.style.bottom = "170px";
+    character.style.transform = "scaleX(1)";
+    character.style.opacity = "1";
+
+    // Clear bridge
+    bridgeContainer.innerHTML = "";
+
+    // Reset UI
+    promptText.textContent = "Click to build";
+    promptText.style.opacity = "1";
+    plankCounter.style.opacity = "0";
+    plankCounter.textContent = "";
+    bridgeCompleteText.style.opacity = "0";
+    finalMessage.style.opacity = "0";
+    resetBtn.style.opacity = "0";
+    resetBtn.style.pointerEvents = "none";
+    bg.style.filter = "none";
+
+    // Reset ropes
+    ropeTop.style.opacity = "0";
+    ropeBottom.style.opacity = "0";
+
+    // Remove confetti
+    document.querySelectorAll(".confetti").forEach(c => c.remove());
+
+    container.style.cursor = "pointer";
+  }
+
+  function addPlank() {
+    if (bridgeComplete || walking || gameOver) return;
+
+    plankCount++;
+
+    const plank = document.createElement("img");
+    plank.src = "assets/plank.png";
+    plank.className = "plank";
+    plank.alt = "plank";
+    bridgeContainer.appendChild(plank);
+
+    // Show ropes as soon as first plank is placed
+    if (plankCount === 1) {
+      ropeTop.style.opacity = "0.6";
+      ropeBottom.style.opacity = "0.6";
+    }
+
+    // Update rope width to match bridge progress
+    const progress = plankCount / TOTAL_PLANKS;
+    const ropeWidth = 404 * progress;
+    ropeTop.style.width = ropeWidth + "px";
+    ropeBottom.style.width = ropeWidth + "px";
+
+    // Trigger animation after a frame
+    requestAnimationFrame(() => {
+      plank.classList.add("placed");
+    });
+
+    // Update counter
+    promptText.style.opacity = "0";
+    plankCounter.style.opacity = "1";
+    plankCounter.textContent = `Planks: ${plankCount} / ${TOTAL_PLANKS}`;
+
+    if (plankCount >= TOTAL_PLANKS) {
+      bridgeComplete = true;
+      container.style.cursor = "default";
+
+      setTimeout(() => {
+        bridgeCompleteText.style.opacity = "1";
+        plankCounter.style.opacity = "0";
+      }, 500);
+
+      setTimeout(() => {
+        walkAcrossBridge();
+      }, 1500);
+    }
+  }
+
+  function walkAcrossBridge() {
+    walking = true;
+    bridgeCompleteText.style.opacity = "0";
+
+    const startX = 195;
+    const endX = 660;
+    const duration = 3000;
+    const startTime = performance.now();
+
+    // Character faces right (default)
+    character.style.transform = "scaleX(1)";
+
+    function animate(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease in-out
+      const ease = progress < 0.5
+        ? 2 * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+      const currentX = startX + (endX - startX) * ease;
+      character.style.left = currentX + "px";
+
+      // Slight bobbing while walking
+      const bob = Math.sin(progress * Math.PI * 12) * 3;
+      character.style.bottom = (170 + bob) + "px";
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        character.style.bottom = "170px";
+        walking = false;
+        showScene2();
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  function showScene2() {
+    scene = "scene2";
+    gameOver = true;
+
+    // Brighten background
+    bg.style.filter = "brightness(1.15) saturate(1.1)";
+
+    // Show final message
+    setTimeout(() => {
+      finalMessage.style.opacity = "1";
+    }, 400);
+
+    // Show reset button
+    setTimeout(() => {
+      resetBtn.style.opacity = "1";
+      resetBtn.style.pointerEvents = "auto";
+    }, 1200);
+
+    // Spawn confetti
+    spawnConfetti();
+  }
+
+  function spawnConfetti() {
+    const colors = [
+      "#ff6b6b", "#ffd93d", "#6bcb77", "#4d96ff",
+      "#ff8ee0", "#a66cff", "#ffa45b", "#80ffdb"
+    ];
+
+    for (let i = 0; i < 60; i++) {
+      const confetti = document.createElement("div");
+      confetti.className = "confetti";
+      confetti.style.left = (Math.random() * 900) + "px";
+      confetti.style.top = "-10px";
+      confetti.style.width = (4 + Math.random() * 6) + "px";
+      confetti.style.height = (4 + Math.random() * 6) + "px";
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.borderRadius = Math.random() > 0.5 ? "50%" : "2px";
+      confetti.style.animation = `confetti-fall ${2 + Math.random() * 3}s ease-in ${Math.random() * 2}s forwards`;
+      container.appendChild(confetti);
+    }
+  }
+
+  // Click handler
+  container.addEventListener("click", function(e) {
+    // Don't trigger on reset button clicks
+    if (e.target === resetBtn) return;
+    if (scene === "scene1" && !bridgeComplete && !walking) {
+      addPlank();
+    }
+  });
+
+  // Reset button handler
+  resetBtn.addEventListener("click", function(e) {
+    e.stopPropagation();
+    initScene1();
+  });
+
+  // Initialize
+  initScene1();
+})();
+</script>
+
+</body>
+</html>
