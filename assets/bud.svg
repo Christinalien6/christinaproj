@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Soil mound -->
+  <ellipse cx="100" cy="170" rx="60" ry="18" fill="#8B6914"/>
+  <ellipse cx="100" cy="168" rx="58" ry="15" fill="#A0782C"/>
+  <!-- Stem -->
+  <path d="M100 165 Q96 130 100 60" stroke="#5E8C31" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <!-- Lower leaves -->
+  <path d="M98 140 Q65 125 60 108" stroke="#5CA05C" stroke-width="1" fill="#6DBF6D"/>
+  <path d="M102 135 Q135 120 140 103" stroke="#5CA05C" stroke-width="1" fill="#6DBF6D"/>
+  <!-- Mid leaves -->
+  <path d="M99 110 Q70 95 65 78" stroke="#5CA05C" stroke-width="1" fill="#7CCD7C"/>
+  <path d="M101 105 Q130 90 135 73" stroke="#5CA05C" stroke-width="1" fill="#7CCD7C"/>
+  <!-- Bud sepals -->
+  <path d="M92 62 Q88 48 92 38" stroke="#4A8F4A" stroke-width="1" fill="#5E8C31"/>
+  <path d="M108 62 Q112 48 108 38" stroke="#4A8F4A" stroke-width="1" fill="#5E8C31"/>
+  <!-- Bud body -->
+  <ellipse cx="100" cy="45" rx="12" ry="18" fill="#E8A0B0"/>
+  <ellipse cx="100" cy="43" rx="10" ry="15" fill="#F0B0C0"/>
+  <!-- Bud tip lines -->
+  <path d="M96 32 Q100 28 104 32" stroke="#E090A0" stroke-width="1" fill="none"/>
+  <path d="M98 35 Q100 32 102 35" stroke="#E090A0" stroke-width="0.7" fill="none"/>
+</svg>

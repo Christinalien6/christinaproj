@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Soil mound -->
+  <ellipse cx="100" cy="160" rx="60" ry="18" fill="#8B6914"/>
+  <ellipse cx="100" cy="158" rx="58" ry="15" fill="#A0782C"/>
+  <!-- Stem -->
+  <path d="M100 155 Q98 130 100 110" stroke="#6B8E23" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- Two small cotyledon leaves -->
+  <ellipse cx="90" cy="108" rx="12" ry="6" fill="#7CCD7C" transform="rotate(-30,90,108)"/>
+  <ellipse cx="110" cy="108" rx="12" ry="6" fill="#7CCD7C" transform="rotate(30,110,108)"/>
+  <!-- Leaf veins -->
+  <line x1="84" y1="106" x2="96" y2="110" stroke="#5CA05C" stroke-width="0.7"/>
+  <line x1="116" y1="106" x2="104" y2="110" stroke="#5CA05C" stroke-width="0.7"/>
+</svg>

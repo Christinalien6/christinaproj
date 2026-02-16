@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Soil mound -->
+  <ellipse cx="100" cy="175" rx="60" ry="18" fill="#8B6914"/>
+  <ellipse cx="100" cy="173" rx="58" ry="15" fill="#A0782C"/>
+  <!-- Stem -->
+  <path d="M100 170 Q96 130 100 65" stroke="#5E8C31" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <!-- Lower leaves -->
+  <path d="M98 145 Q62 130 57 112" stroke="#5CA05C" stroke-width="1" fill="#6DBF6D"/>
+  <path d="M102 140 Q138 125 143 107" stroke="#5CA05C" stroke-width="1" fill="#6DBF6D"/>
+  <!-- Mid leaves -->
+  <path d="M99 115 Q68 100 63 82" stroke="#5CA05C" stroke-width="1" fill="#7CCD7C"/>
+  <path d="M101 110 Q132 95 137 77" stroke="#5CA05C" stroke-width="1" fill="#7CCD7C"/>
+  <!-- Flower petals (fully open) -->
+  <!-- Back petals -->
+  <ellipse cx="82" cy="38" rx="10" ry="18" fill="#F5C6D0" transform="rotate(-30,82,38)"/>
+  <ellipse cx="118" cy="38" rx="10" ry="18" fill="#F5C6D0" transform="rotate(30,118,38)"/>
+  <ellipse cx="100" cy="28" rx="10" ry="18" fill="#F5C6D0"/>
+  <!-- Front petals -->
+  <ellipse cx="88" cy="48" rx="10" ry="16" fill="#F9D4DC" transform="rotate(-50,88,48)"/>
+  <ellipse cx="112" cy="48" rx="10" ry="16" fill="#F9D4DC" transform="rotate(50,112,48)"/>
+  <!-- Center -->
+  <circle cx="100" cy="45" r="9" fill="#FFE066"/>
+  <circle cx="100" cy="45" r="6" fill="#FFD700"/>
+  <!-- Center dots -->
+  <circle cx="97" cy="43" r="1.2" fill="#E6B800"/>
+  <circle cx="103" cy="43" r="1.2" fill="#E6B800"/>
+  <circle cx="100" cy="47" r="1.2" fill="#E6B800"/>
+  <circle cx="96" cy="47" r="1" fill="#E6B800"/>
+  <circle cx="104" cy="47" r="1" fill="#E6B800"/>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Soil mound -->
+  <ellipse cx="100" cy="165" rx="60" ry="18" fill="#8B6914"/>
+  <ellipse cx="100" cy="163" rx="58" ry="15" fill="#A0782C"/>
+  <!-- Stem -->
+  <path d="M100 160 Q97 130 100 80" stroke="#5E8C31" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- Lower left leaf -->
+  <path d="M98 135 Q70 120 65 105" stroke="#5CA05C" stroke-width="1" fill="#6DBF6D"/>
+  <path d="M98 135 Q80 130 65 105" stroke="#4A8F4A" stroke-width="0.7" fill="none"/>
+  <!-- Lower right leaf -->
+  <path d="M100 130 Q130 115 138 100" stroke="#5CA05C" stroke-width="1" fill="#6DBF6D"/>
+  <path d="M100 130 Q120 125 138 100" stroke="#4A8F4A" stroke-width="0.7" fill="none"/>
+  <!-- Upper left leaf -->
+  <path d="M99 105 Q72 90 68 72" stroke="#5CA05C" stroke-width="1" fill="#7CCD7C"/>
+  <path d="M99 105 Q80 98 68 72" stroke="#4A8F4A" stroke-width="0.7" fill="none"/>
+  <!-- Upper right leaf -->
+  <path d="M100 100 Q128 85 135 68" stroke="#5CA05C" stroke-width="1" fill="#7CCD7C"/>
+  <path d="M100 100 Q118 93 135 68" stroke="#4A8F4A" stroke-width="0.7" fill="none"/>
+  <!-- Top tiny leaves -->
+  <ellipse cx="94" cy="80" rx="8" ry="4" fill="#8FD88F" transform="rotate(-25,94,80)"/>
+  <ellipse cx="106" cy="80" rx="8" ry="4" fill="#8FD88F" transform="rotate(25,106,80)"/>
+</svg>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Growth</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      cursor: pointer;
+      user-select: none;
+      transition: background 1.2s ease;
+    }
+
+    /* Scene 1: warm beige gradient */
+    body.scene1 {
+      background: linear-gradient(160deg, #f5ede3 0%, #f0e4d4 40%, #ebe0cd 100%);
+    }
+
+    /* Scene 2: subtly warmer / brighter */
+    body.scene2 {
+      background: linear-gradient(160deg, #fdf5e6 0%, #f8edd8 40%, #fce8c8 100%);
+    }
+
+    #plant-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #plant-container img {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    #plant-container img.hidden {
+      opacity: 0;
+      transform: scale(0.85);
+    }
+
+    #plant-container img.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Idle bob animation for Scene 2 */
+    @keyframes bob {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-6px) scale(1); }
+    }
+
+    #plant-container img.bobbing {
+      animation: bob 3s ease-in-out infinite;
+    }
+
+    #hint-text {
+      margin-top: 24px;
+      font-size: 14px;
+      color: #9a8a75;
+      letter-spacing: 0.5px;
+      transition: opacity 0.5s ease;
+    }
+
+    #progress-text {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #b0a090;
+      letter-spacing: 0.3px;
+      transition: opacity 0.5s ease;
+    }
+
+    #final-message {
+      margin-top: 28px;
+      font-size: 18px;
+      color: #7a6a55;
+      letter-spacing: 1px;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      pointer-events: none;
+    }
+
+    #final-message.show {
+      opacity: 1;
+    }
+
+    #reset-btn {
+      margin-top: 18px;
+      padding: 8px 28px;
+      font-family: 'Georgia', serif;
+      font-size: 14px;
+      color: #7a6a55;
+      background: transparent;
+      border: 1.5px solid #c4b49a;
+      border-radius: 20px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.6s ease, background 0.3s ease;
+      pointer-events: none;
+    }
+
+    #reset-btn.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #reset-btn:hover {
+      background: rgba(196, 180, 154, 0.2);
+    }
+  </style>
+</head>
+<body class="scene1">
+
+  <div id="plant-container">
+    <img id="img-seed"   src="assets/seed.svg"   class="visible" alt="Seed">
+    <img id="img-sprout" src="assets/sprout.svg"  class="hidden"  alt="Sprout">
+    <img id="img-leaves" src="assets/leaves.svg"  class="hidden"  alt="Leaves">
+    <img id="img-bud"    src="assets/bud.svg"     class="hidden"  alt="Bud">
+    <img id="img-bloom"  src="assets/bloom.svg"   class="hidden"  alt="Bloom">
+  </div>
+
+  <div id="hint-text">Click to nurture</div>
+  <div id="progress-text">Stage 1 / 5</div>
+  <div id="final-message">Growth takes care.</div>
+  <button id="reset-btn">Reset</button>
+
+  <script>
+    const stages = ['seed', 'sprout', 'leaves', 'bud', 'bloom'];
+    const images = stages.map(s => document.getElementById('img-' + s));
+    const hintText = document.getElementById('hint-text');
+    const progressText = document.getElementById('progress-text');
+    const finalMessage = document.getElementById('final-message');
+    const resetBtn = document.getElementById('reset-btn');
+
+    let currentStage = 0; // 0-indexed
+    let scene = 1;
+
+    function showStage(index) {
+      images.forEach((img, i) => {
+        if (i === index) {
+          img.className = 'visible';
+        } else {
+          img.className = 'hidden';
+        }
+      });
+    }
+
+    function updateProgress() {
+      progressText.textContent = 'Stage ' + (currentStage + 1) + ' / 5';
+    }
+
+    function enterScene2() {
+      scene = 2;
+      document.body.className = 'scene2';
+      hintText.style.opacity = '0';
+      progressText.style.opacity = '0';
+      finalMessage.classList.add('show');
+      resetBtn.classList.add('show');
+
+      // Add idle bob to bloom
+      const bloomImg = document.getElementById('img-bloom');
+      bloomImg.classList.add('bobbing');
+    }
+
+    function resetToScene1() {
+      scene = 1;
+      currentStage = 0;
+      document.body.className = 'scene1';
+
+      // Remove bob
+      const bloomImg = document.getElementById('img-bloom');
+      bloomImg.classList.remove('bobbing');
+
+      showStage(0);
+      updateProgress();
+
+      hintText.style.opacity = '1';
+      progressText.style.opacity = '1';
+      finalMessage.classList.remove('show');
+      resetBtn.classList.remove('show');
+    }
+
+    // Click anywhere to advance stage (Scene 1 only)
+    document.body.addEventListener('click', function (e) {
+      // Ignore clicks on the reset button
+      if (e.target === resetBtn) return;
+
+      if (scene === 2) return;
+
+      if (currentStage < stages.length - 1) {
+        currentStage++;
+        showStage(currentStage);
+        updateProgress();
+
+        if (currentStage === stages.length - 1) {
+          // Reached bloom -> transition to Scene 2
+          hintText.textContent = '';
+          setTimeout(enterScene2, 700);
+        }
+      }
+    });
+
+    // Reset button
+    resetBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      resetToScene1();
+    });
+  </script>
+</body>
+</html>

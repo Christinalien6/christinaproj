@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Soil mound -->
+  <ellipse cx="100" cy="160" rx="60" ry="18" fill="#8B6914"/>
+  <ellipse cx="100" cy="158" rx="58" ry="15" fill="#A0782C"/>
+  <!-- Seed -->
+  <ellipse cx="100" cy="142" rx="14" ry="10" fill="#C4956A" transform="rotate(-15,100,142)"/>
+  <ellipse cx="100" cy="142" rx="12" ry="8" fill="#D4A574" transform="rotate(-15,100,142)"/>
+  <!-- Seed line -->
+  <path d="M92 139 Q100 135 108 140" stroke="#B8845A" stroke-width="1" fill="none"/>
+</svg>
