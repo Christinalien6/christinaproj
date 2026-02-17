@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Scene</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    overflow: hidden;
+    background: #050510;
+    width: 100vw;
+    height: 100vh;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* ---- starfield ---- */
+  #stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+  #stars .star {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    animation: twinkle 3s ease-in-out infinite alternate;
+  }
+  @keyframes twinkle {
+    0%   { opacity: 0.3; }
+    100% { opacity: 1; }
+  }
+
+  /* ---- stage ---- */
+  #stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    transition: background 1.4s ease;
+  }
+  #stage.bright {
+    background: radial-gradient(ellipse at 50% 80%, rgba(30,50,80,0.6) 0%, transparent 70%);
+  }
+
+  /* ---- elements ---- */
+  .element {
+    position: absolute;
+    transition: transform 1.2s ease, opacity 1.2s ease;
+  }
+
+  /* UFO */
+  #ufo {
+    width: 220px;
+    left: 50%;
+    transform: translate(-50%, -260px);
+    top: 0;
+    z-index: 10;
+  }
+  #ufo.arrive {
+    transform: translate(-50%, 30px);
+  }
+  #ufo.hover {
+    animation: gentleHover 3s ease-in-out infinite;
+  }
+  #ufo.fade-out {
+    opacity: 0;
+    transform: translate(-50%, -260px);
+    transition: transform 2.5s ease-in, opacity 2.5s ease-in;
+  }
+  @keyframes gentleHover {
+    0%, 100% { transform: translate(-50%, 30px); }
+    50%      { transform: translate(-50%, 18px); }
+  }
+
+  /* Robot */
+  #robot {
+    width: 120px;
+    bottom: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+  }
+  #robot.turn {
+    transform: translateX(-50%) rotateY(15deg);
+  }
+  #robot.move-to-earth {
+    transform: translateX(-160%) rotateY(15deg);
+    transition: transform 1.6s ease;
+  }
+
+  /* Earth */
+  #earth {
+    width: 150px;
+    bottom: 14%;
+    left: 18%;
+    z-index: 4;
+    filter: drop-shadow(0 0 18px rgba(100,220,255,0.4));
+    cursor: pointer;
+  }
+  #earth.glow {
+    filter: drop-shadow(0 0 30px rgba(100,220,255,0.7));
+    transition: filter 0.6s ease;
+  }
+
+  /* Helmet */
+  #helmet {
+    width: 70px;
+    bottom: 16%;
+    left: 56%;
+    z-index: 6;
+  }
+  #helmet.on-head {
+    /* move to robot's head — adjusted for robot.move-to-earth position */
+    bottom: 46%;
+    left: 24%;
+    width: 72px;
+    transition: left 1s ease 0.3s, bottom 1s ease 0.3s, width 0.4s ease;
+  }
+  #helmet.left-behind {
+    opacity: 0.5;
+    transition: opacity 1s ease;
+  }
+
+  /* ---- prompt text ---- */
+  .prompt {
+    position: absolute;
+    bottom: 6%;
+    width: 100%;
+    text-align: center;
+    color: rgba(200,230,255,0.7);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    z-index: 20;
+    pointer-events: none;
+  }
+  .prompt.show { opacity: 1; }
+
+  /* ---- choice buttons (scene 2) ---- */
+  #choices {
+    position: absolute;
+    bottom: 5%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+  #choices.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #choices button {
+    padding: 10px 28px;
+    border: 1px solid rgba(100,255,200,0.5);
+    border-radius: 24px;
+    background: rgba(10,30,40,0.7);
+    color: #99ffcc;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+  #choices button:hover {
+    background: rgba(30,80,70,0.7);
+    border-color: rgba(100,255,200,0.9);
+  }
+</style>
+</head>
+<body>
+
+<!-- stars -->
+<div id="stars"></div>
+
+<!-- stage -->
+<div id="stage">
+  <img id="ufo"    class="element" src="assets/ufo.svg"    alt="UFO">
+  <img id="robot"  class="element" src="assets/robot.svg"  alt="Robot">
+  <img id="earth"  class="element" src="assets/earth.svg"  alt="Earth">
+  <img id="helmet" class="element" src="assets/helmet.svg" alt="Helmet">
+
+  <div id="prompt1" class="prompt">Click anywhere to begin</div>
+  <div id="prompt2" class="prompt">Click the Earth</div>
+
+  <div id="choices">
+    <button id="btnWear">Wear helmet</button>
+    <button id="btnLeave">Leave helmet</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* ---- generate stars ---- */
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.width = size + 'px';
+    s.style.height = size + 'px';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.animationDelay = (Math.random() * 4).toFixed(2) + 's';
+    s.style.animationDuration = (Math.random() * 2 + 2).toFixed(2) + 's';
+    starsEl.appendChild(s);
+  }
+
+  /* ---- refs ---- */
+  const stage   = document.getElementById('stage');
+  const ufo     = document.getElementById('ufo');
+  const robot   = document.getElementById('robot');
+  const earth   = document.getElementById('earth');
+  const helmet  = document.getElementById('helmet');
+  const prompt1 = document.getElementById('prompt1');
+  const prompt2 = document.getElementById('prompt2');
+  const choices = document.getElementById('choices');
+  const btnWear  = document.getElementById('btnWear');
+  const btnLeave = document.getElementById('btnLeave');
+
+  let scene = 0; // 0 = idle, 1 = arrival, 2 = choice
+
+  /* ---- show first prompt after a beat ---- */
+  setTimeout(() => { prompt1.classList.add('show'); }, 600);
+
+  /* ---- Scene 1 trigger: click anywhere ---- */
+  stage.addEventListener('click', function onScene1(e) {
+    if (scene !== 0) return;
+    // ignore clicks on earth / buttons during scene 0
+    scene = 1;
+    prompt1.classList.remove('show');
+
+    // UFO floats in
+    ufo.classList.add('arrive');
+
+    // after UFO arrives, add hover + slight robot turn
+    setTimeout(() => {
+      ufo.classList.add('hover');
+      robot.classList.add('turn');
+      earth.classList.add('glow');
+      prompt2.classList.add('show');
+    }, 1300);
+  });
+
+  /* ---- Scene 2 trigger: click the Earth ---- */
+  earth.addEventListener('click', function onScene2(e) {
+    if (scene !== 1) return;
+    e.stopPropagation();
+    scene = 2;
+    prompt2.classList.remove('show');
+
+    // brighten background
+    stage.classList.add('bright');
+
+    // robot walks toward earth
+    robot.classList.remove('turn');
+    robot.classList.add('move-to-earth');
+
+    // ufo fades out upward
+    ufo.classList.remove('hover');
+    ufo.classList.add('fade-out');
+
+    // show choice buttons
+    setTimeout(() => { choices.classList.add('show'); }, 1600);
+  });
+
+  /* ---- Choice: wear helmet ---- */
+  btnWear.addEventListener('click', function (e) {
+    e.stopPropagation();
+    choices.classList.remove('show');
+    helmet.classList.add('on-head');
+  });
+
+  /* ---- Choice: leave helmet ---- */
+  btnLeave.addEventListener('click', function (e) {
+    e.stopPropagation();
+    choices.classList.remove('show');
+    helmet.classList.add('left-behind');
+  });
+})();
+</script>
+</body>
+</html>
