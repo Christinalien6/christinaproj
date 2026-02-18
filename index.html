@@ -9,10 +9,9 @@
 
   body {
     overflow: hidden;
-    background: #050510;
+    background: #000;
     width: 100vw;
     height: 100vh;
-    cursor: pointer;
     user-select: none;
   }
 
@@ -22,15 +21,16 @@
     inset: 0;
     z-index: 0;
   }
-  #stars .star {
+  .star {
     position: absolute;
     border-radius: 50%;
-    background: white;
+    background: #fff;
+    opacity: 0.4;
     animation: twinkle 3s ease-in-out infinite alternate;
   }
   @keyframes twinkle {
-    0%   { opacity: 0.3; }
-    100% { opacity: 1; }
+    0%   { opacity: 0.2; }
+    100% { opacity: 0.9; }
   }
 
   /* ---- stage ---- */
@@ -39,250 +39,337 @@
     width: 100vw;
     height: 100vh;
     z-index: 1;
-    transition: background 1.4s ease;
-  }
-  #stage.bright {
-    background: radial-gradient(ellipse at 50% 80%, rgba(30,50,80,0.6) 0%, transparent 70%);
   }
 
-  /* ---- elements ---- */
-  .element {
+  /* ---- earth (rises from below) ---- */
+  #earth {
     position: absolute;
-    transition: transform 1.2s ease, opacity 1.2s ease;
-  }
-
-  /* UFO */
-  #ufo {
-    width: 220px;
+    bottom: 0;
     left: 50%;
-    transform: translate(-50%, -260px);
-    top: 0;
-    z-index: 10;
-  }
-  #ufo.arrive {
-    transform: translate(-50%, 30px);
-  }
-  #ufo.hover {
-    animation: gentleHover 3s ease-in-out infinite;
-  }
-  #ufo.fade-out {
+    transform: translateX(-50%) translateY(100%);
+    width: 140vw;
+    height: 80vh;
+    z-index: 2;
+    pointer-events: none;
     opacity: 0;
-    transform: translate(-50%, -260px);
-    transition: transform 2.5s ease-in, opacity 2.5s ease-in;
+    transition: transform 2s cubic-bezier(.25,.46,.45,.94),
+                opacity 1.6s ease;
   }
-  @keyframes gentleHover {
-    0%, 100% { transform: translate(-50%, 30px); }
-    50%      { transform: translate(-50%, 18px); }
+  #earth svg {
+    width: 100%;
+    height: 100%;
+  }
+  #earth.visible {
+    transform: translateX(-50%) translateY(0%);
+    opacity: 1;
   }
 
-  /* Robot */
-  #robot {
-    width: 120px;
+  /* ---- ufo group (ufo + robot + helmet inside) ---- */
+  #ufo-group {
+    position: absolute;
+    left: 50%;
+    top: 28%;
+    transform: translateX(-50%);
+    z-index: 10;
+    cursor: pointer;
+    animation: float 3.5s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { top: 28%; }
+    50%      { top: 26%; }
+  }
+  #ufo-group.exit-up {
+    animation: none;
+    top: -300px;
+    opacity: 0;
+    transition: top 2.2s cubic-bezier(.55,.06,.68,.19),
+                opacity 2s ease;
+  }
+
+  /* ufo saucer */
+  #ufo-ship {
+    width: 280px;
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* robot sitting inside the dome */
+  #robot-inside {
+    position: absolute;
+    width: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: -12px;
+    z-index: 11;
+    pointer-events: none;
+  }
+
+  /* helmet on robot's head while inside UFO */
+  #helmet-on {
+    position: absolute;
+    width: 42px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: -30px;
+    z-index: 12;
+    pointer-events: none;
+  }
+
+  /* ---- robot on earth (hidden initially) ---- */
+  #robot-landed {
+    position: absolute;
     bottom: 18%;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 5;
-  }
-  #robot.turn {
-    transform: translateX(-50%) rotateY(15deg);
-  }
-  #robot.move-to-earth {
-    transform: translateX(-160%) rotateY(15deg);
-    transition: transform 1.6s ease;
-  }
-
-  /* Earth */
-  #earth {
-    width: 150px;
-    bottom: 14%;
-    left: 18%;
-    z-index: 4;
-    filter: drop-shadow(0 0 18px rgba(100,220,255,0.4));
-    cursor: pointer;
-  }
-  #earth.glow {
-    filter: drop-shadow(0 0 30px rgba(100,220,255,0.7));
-    transition: filter 0.6s ease;
-  }
-
-  /* Helmet */
-  #helmet {
-    width: 70px;
-    bottom: 16%;
-    left: 56%;
-    z-index: 6;
-  }
-  #helmet.on-head {
-    /* move to robot's head — adjusted for robot.move-to-earth position */
-    bottom: 46%;
-    left: 24%;
-    width: 72px;
-    transition: left 1s ease 0.3s, bottom 1s ease 0.3s, width 0.4s ease;
-  }
-  #helmet.left-behind {
-    opacity: 0.5;
-    transition: opacity 1s ease;
-  }
-
-  /* ---- prompt text ---- */
-  .prompt {
-    position: absolute;
-    bottom: 6%;
-    width: 100%;
-    text-align: center;
-    color: rgba(200,230,255,0.7);
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    font-size: 14px;
-    letter-spacing: 1px;
+    width: 100px;
+    z-index: 8;
     opacity: 0;
-    transition: opacity 0.8s ease;
-    z-index: 20;
     pointer-events: none;
   }
-  .prompt.show { opacity: 1; }
+  #robot-landed.show {
+    opacity: 1;
+    transition: opacity 0.6s ease 0.8s;
+  }
 
-  /* ---- choice buttons (scene 2) ---- */
-  #choices {
+  /* ---- helmet dropping beside robot ---- */
+  #helmet-dropped {
+    position: absolute;
+    bottom: 20%;
+    left: calc(50% + 70px);
+    transform: translateX(-50%);
+    width: 40px;
+    z-index: 9;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #helmet-dropped.lift {
+    bottom: 30%;
+    opacity: 1;
+    transition: bottom 0.8s ease, opacity 0.4s ease;
+  }
+  #helmet-dropped.drop {
+    bottom: 18%;
+    opacity: 1;
+    transition: bottom 0.6s cubic-bezier(.22,.61,.36,1) 0.05s,
+                opacity 0.3s ease;
+    transform: translateX(-50%) rotate(15deg);
+  }
+
+  /* ---- prompt ---- */
+  #prompt {
     position: absolute;
     bottom: 5%;
     width: 100%;
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    z-index: 20;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.6s ease;
-  }
-  #choices.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  #choices button {
-    padding: 10px 28px;
-    border: 1px solid rgba(100,255,200,0.5);
-    border-radius: 24px;
-    background: rgba(10,30,40,0.7);
-    color: #99ffcc;
+    text-align: center;
+    color: rgba(200,230,255,0.6);
     font-family: 'Segoe UI', system-ui, sans-serif;
     font-size: 14px;
-    cursor: pointer;
-    transition: background 0.3s ease, border-color 0.3s ease;
+    letter-spacing: 1px;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.8s ease;
   }
-  #choices button:hover {
-    background: rgba(30,80,70,0.7);
-    border-color: rgba(100,255,200,0.9);
-  }
+  #prompt.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-<!-- stars -->
 <div id="stars"></div>
 
-<!-- stage -->
 <div id="stage">
-  <img id="ufo"    class="element" src="assets/ufo.svg"    alt="UFO">
-  <img id="robot"  class="element" src="assets/robot.svg"  alt="Robot">
-  <img id="earth"  class="element" src="assets/earth.svg"  alt="Earth">
-  <img id="helmet" class="element" src="assets/helmet.svg" alt="Helmet">
 
-  <div id="prompt1" class="prompt">Click anywhere to begin</div>
-  <div id="prompt2" class="prompt">Click the Earth</div>
-
-  <div id="choices">
-    <button id="btnWear">Wear helmet</button>
-    <button id="btnLeave">Leave helmet</button>
+  <!-- Earth (hidden below viewport) -->
+  <div id="earth">
+    <svg viewBox="0 0 204 204" preserveAspectRatio="xMidYMin slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M101.929 0C158.223 0 203.858 45.6352 203.858 101.929C203.858 158.223 158.223 203.858 101.929 203.858C45.6352 203.858 0 158.223 0 101.929C0 45.6352 45.6352 0 101.929 0Z" fill="#99FFFF" fill-opacity="0.301961"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M101.929 7.47156C154.097 7.47156 196.386 49.7612 196.386 101.929C196.386 154.097 154.097 196.386 101.929 196.386C49.7612 196.386 7.47156 154.097 7.47156 101.929C7.47156 49.7612 49.7612 7.47156 101.929 7.47156Z" fill="#99FFFF" fill-opacity="0.8"/>
+      <path d="M101.929 190.85C151.039 190.85 190.85 151.039 190.85 101.929C190.85 52.8194 151.039 13.0081 101.929 13.0081C52.8194 13.0081 13.0081 52.8194 13.0081 101.929C13.0081 151.039 52.8194 190.85 101.929 190.85Z" fill="#00CCFF"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M145.777 179.301C132.836 186.65 117.874 190.851 101.93 190.851C87.495 190.851 73.8649 187.408 61.811 181.303C71.1555 176.096 83.994 172.474 95.5113 171.69C113.948 170.436 128.998 176.456 142.355 178.777C143.507 178.977 144.645 179.149 145.778 179.3L145.777 179.301ZM185.503 132.367C181.438 143.525 175.2 153.636 167.305 162.197C159.028 159.905 150.119 157.293 141.799 155.538C121.293 151.211 104.362 152.089 89.2023 152.929C74.0427 153.769 60.6545 154.571 47.9878 160.341C45.0213 161.691 42.0955 163.315 39.2327 164.983C30.5925 156.391 23.7073 146.038 19.1646 134.503C30.0173 127.948 44.871 123.343 58.6484 122.302C79.4056 120.734 97.7166 127.256 112.766 126.754C127.816 126.252 139.606 118.727 152.711 118.602C163.907 118.494 176.061 123.788 185.504 132.368L185.503 132.367ZM183.387 66.2298C188.183 77.1576 190.851 89.2308 190.851 101.93C190.851 103.409 190.812 104.879 190.742 106.341C173.816 104.248 157.033 96.9605 142.08 96.3914C125.023 95.742 110.35 103.834 94.0448 106.932C77.7409 110.03 59.8059 108.131 39.4878 109.43C30.874 109.981 21.8313 111.106 13.5701 111.915C13.2042 108.636 13.0091 105.305 13.0091 101.929C13.0091 90.9879 14.9898 80.5092 18.6047 70.8283C26.1595 68.369 34.0905 67.1769 41.495 67.9147C58.0509 69.5631 71.9716 80.8537 82.8202 80.7542C93.6687 80.6535 101.445 69.1647 112.607 61.621C123.769 54.0773 138.317 50.4807 148.163 53.2287C158.008 55.9757 163.151 65.0682 176.444 66.2176C178.57 66.4015 180.906 66.3812 183.387 66.2298ZM101.93 13.0081C120.734 13.0081 138.171 18.8496 152.536 28.811C152.026 28.9868 151.519 29.1565 151.017 29.3202C134.462 34.7135 122.799 33.3334 109.441 35.6535C96.0844 37.9736 81.0336 43.994 62.5976 42.7399C55.2094 42.2368 47.2775 40.5651 40.0722 38.0569C56.0773 22.5539 77.8873 13.0081 101.929 13.0081H101.93Z" fill="#66FFCC" fill-opacity="0.501961"/>
+    </svg>
   </div>
+
+  <!-- UFO group: ship + robot inside + helmet on head -->
+  <div id="ufo-group">
+    <!-- Helmet on robot's head -->
+    <div id="helmet-on">
+      <svg width="115" height="142" viewBox="0 0 115 142" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M57.3994 27.0641C89.1007 27.0641 114.799 52.7623 114.799 84.4635C114.799 116.165 89.1007 141.863 57.3994 141.863C25.6982 141.863 0 116.165 0 84.4635C0 52.7623 25.6982 27.0641 57.3994 27.0641Z" fill="#00CCFF" fill-opacity="0.301961"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M44.8842 74.1068C51.2216 74.1068 56.3598 79.244 56.3598 85.5814C56.3598 91.9188 51.2226 97.057 44.8842 97.057C38.5468 97.057 33.4096 91.9198 33.4096 85.5814C33.4096 79.244 38.5468 74.1068 44.8842 74.1068Z" fill="white" fill-opacity="0.501961"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M57.3994 27.0641C82.1901 27.0641 103.308 42.7805 111.339 64.7917H3.46036C11.4898 42.7805 32.6088 27.0641 57.3994 27.0641Z" fill="#33CC99" stroke="#33CC99" stroke-width="4" stroke-miterlimit="2.61313"/>
+        <path d="M57.3994 27.0641V6.19513" stroke="#33CC99" stroke-width="4" stroke-miterlimit="2.61313"/>
+        <path d="M57.3994 12.3903C60.8209 12.3903 63.5946 9.6166 63.5946 6.19513C63.5946 2.77365 60.8209 0 57.3994 0C53.978 0 51.2043 2.77365 51.2043 6.19513C51.2043 9.6166 53.978 12.3903 57.3994 12.3903Z" fill="#33CC99"/>
+      </svg>
+    </div>
+
+    <!-- Robot inside UFO dome -->
+    <div id="robot-inside">
+      <svg width="181" height="249" viewBox="0 0 181 249" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M180.119 100.96H0V129.112H180.119V100.96Z" fill="#33CC99"/>
+        <path d="M153.027 84.4635H27.0925V167.267H153.027V84.4635Z" fill="#33CC99"/>
+        <path d="M90.06 132.607C116.649 132.607 138.203 111.052 138.203 84.4635C138.203 57.8747 116.649 36.3201 90.06 36.3201C63.4712 36.3201 41.9167 57.8747 41.9167 84.4635C41.9167 111.052 63.4712 132.607 90.06 132.607Z" fill="#33CC99"/>
+        <path d="M90.0601 113.622C106.164 113.622 119.219 100.567 119.219 84.4635C119.219 68.3597 106.164 55.3049 90.0601 55.3049C73.9562 55.3049 60.9015 68.3597 60.9015 84.4635C60.9015 100.567 73.9562 113.622 90.0601 113.622Z" fill="#FFCC00"/>
+        <path d="M90.06 94.0245C95.3404 94.0245 99.621 89.7439 99.621 84.4635C99.621 79.1831 95.3404 74.9025 90.06 74.9025C84.7797 74.9025 80.4991 79.1831 80.4991 84.4635C80.4991 89.7439 84.7797 94.0245 90.06 94.0245Z" fill="black" stroke="#373435" stroke-width="0.666667" stroke-miterlimit="2.61313"/>
+        <path d="M18.3455 129.112H8.24899V197.566H18.3455V129.112Z" fill="#333300"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M96.8243 167.267H122.554V248.498H109.689C102.614 248.498 96.8243 242.71 96.8243 235.633V167.267Z" fill="#333300"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M83.2948 167.267H57.5651V248.498H70.4299C77.5052 248.498 83.2948 242.71 83.2948 235.633V167.267Z" fill="#333300"/>
+        <path d="M13.2978 198.575C18.3284 198.575 22.4065 194.497 22.4065 189.467C22.4065 184.436 18.3284 180.358 13.2978 180.358C8.26715 180.358 4.18903 184.436 4.18903 189.467C4.18903 194.497 8.26715 198.575 13.2978 198.575Z" fill="#333300"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M13.2978 201.983L4.44715 210.834C2.09958 208.486 0.781494 205.303 0.781494 201.983C0.781494 195.069 6.38516 189.467 13.2978 189.467C20.2104 189.467 25.814 195.07 25.814 201.983C25.814 205.302 24.4949 208.486 22.1484 210.834L13.2978 201.983Z" fill="#66FFCC"/>
+        <path d="M13.2978 186.191C17.4354 186.191 20.7897 182.837 20.7897 178.699C20.7897 174.562 17.4354 171.207 13.2978 171.207C9.16014 171.207 5.80591 174.562 5.80591 178.699C5.80591 182.837 9.16014 186.191 13.2978 186.191Z" fill="#333300"/>
+        <path d="M170.974 129.112H160.877V197.566H170.974V129.112Z" fill="#333300"/>
+        <path d="M165.925 198.575C170.956 198.575 175.034 194.497 175.034 189.467C175.034 184.436 170.956 180.358 165.925 180.358C160.894 180.358 156.816 184.436 156.816 189.467C156.816 194.497 160.894 198.575 165.925 198.575Z" fill="#333300"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M165.925 201.983L157.074 210.834C154.727 208.486 153.409 205.303 153.409 201.983C153.409 195.069 159.012 189.467 165.925 189.467C172.838 189.467 178.441 195.07 178.441 201.983C178.441 205.302 177.122 208.486 174.776 210.834L165.925 201.983Z" fill="#66FFCC"/>
+        <path d="M165.925 186.191C170.063 186.191 173.417 182.837 173.417 178.699C173.417 174.562 170.063 171.207 165.925 171.207C161.787 171.207 158.433 174.562 158.433 178.699C158.433 182.837 161.787 186.191 165.925 186.191Z" fill="#333300"/>
+        <path d="M4.19106 100.96H0V129.112H4.19106V100.96Z" fill="#FFCC00"/>
+        <path d="M180.119 100.96H175.928V129.112H180.119V100.96Z" fill="#FFCC00"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M58.5407 248.498H32.8771C32.8771 234.382 44.4259 222.835 58.5407 222.835V248.498Z" fill="#333300"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M121.376 248.498H147.04C147.04 234.382 135.491 222.835 121.376 222.835V248.498Z" fill="#333300"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M90.06 27.0641C121.761 27.0641 147.459 52.7623 147.459 84.4625C147.459 116.164 121.761 141.862 90.06 141.862C58.3588 141.862 32.6606 116.164 32.6606 84.4625C32.6606 52.7623 58.3588 27.0641 90.06 27.0641Z" fill="#00CCFF" fill-opacity="0.301961"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M77.5448 74.1058C83.8822 74.1058 89.0204 79.243 89.0204 85.5814C89.0204 91.9188 83.8832 97.056 77.5448 97.056C71.2074 97.056 66.0702 91.9188 66.0702 85.5814C66.0702 79.244 71.2074 74.1058 77.5448 74.1058Z" fill="white" fill-opacity="0.501961"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M90.06 27.0641C114.851 27.0641 135.969 42.7795 143.999 64.7917H36.1209C44.1504 42.7805 65.2693 27.0641 90.06 27.0641Z" fill="#33CC99" stroke="#33CC99" stroke-width="4" stroke-miterlimit="2.61313"/>
+        <path d="M90.06 27.0641V6.19513" stroke="#33CC99" stroke-width="4" stroke-miterlimit="2.61313"/>
+        <path d="M90.06 12.3903C93.4815 12.3903 96.2552 9.6166 96.2552 6.19512C96.2552 2.77365 93.4815 0 90.06 0C86.6386 0 83.8649 2.77365 83.8649 6.19512C83.8649 9.6166 86.6386 12.3903 90.06 12.3903Z" fill="#33CC99"/>
+      </svg>
+    </div>
+
+    <!-- UFO ship -->
+    <div id="ufo-ship">
+      <svg width="552" height="214" viewBox="0 0 552 214" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M275.58 0C333.676 0 380.773 47.0965 380.773 105.193C380.773 163.29 333.676 210.386 275.58 210.386C217.483 210.386 170.386 163.29 170.386 105.193C170.386 47.0965 217.483 0 275.58 0Z" fill="#99FFFF" fill-opacity="0.501961"/>
+        <path d="M275.58 213.552C427.778 213.552 551.159 192.808 551.159 167.219C551.159 141.629 427.778 120.885 275.58 120.885C123.381 120.885 0 141.629 0 167.219C0 192.808 123.381 213.552 275.58 213.552Z" fill="#33CC99"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M551.159 167.219C551.159 192.808 427.778 213.552 275.58 213.552C123.381 213.552 0 192.808 0 167.219H551.16H551.159Z" fill="#333300"/>
+        <path d="M270.425 173.728C274.02 173.728 276.934 170.814 276.934 167.219C276.934 163.624 274.02 160.709 270.425 160.709C266.83 160.709 263.916 163.624 263.916 167.219C263.916 170.814 266.83 173.728 270.425 173.728Z" fill="#FFCC00"/>
+        <path d="M339.299 173.728C342.894 173.728 345.808 170.814 345.808 167.219C345.808 163.624 342.894 160.709 339.299 160.709C335.704 160.709 332.79 163.624 332.79 167.219C332.79 170.814 335.704 173.728 339.299 173.728Z" fill="#FFCC00"/>
+        <path d="M204.456 173.728C208.051 173.728 210.966 170.814 210.966 167.219C210.966 163.624 208.051 160.709 204.456 160.709C200.862 160.709 197.947 163.624 197.947 167.219C197.947 170.814 200.862 173.728 204.456 173.728Z" fill="#FFCC00"/>
+        <path d="M395.406 173.728C399.001 173.728 401.915 170.814 401.915 167.219C401.915 163.624 399.001 160.709 395.406 160.709C391.811 160.709 388.897 163.624 388.897 167.219C388.897 170.814 391.811 173.728 395.406 173.728Z" fill="#FFCC00"/>
+        <path d="M145.249 173.728C148.844 173.728 151.758 170.814 151.758 167.219C151.758 163.624 148.844 160.709 145.249 160.709C141.654 160.709 138.74 163.624 138.74 167.219C138.74 170.814 141.654 173.728 145.249 173.728Z" fill="#FFCC00"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Robot on Earth (hidden until Scene 2) -->
+  <div id="robot-landed">
+    <svg width="181" height="249" viewBox="0 0 181 249" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M180.119 100.96H0V129.112H180.119V100.96Z" fill="#33CC99"/>
+      <path d="M153.027 84.4635H27.0925V167.267H153.027V84.4635Z" fill="#33CC99"/>
+      <path d="M90.06 132.607C116.649 132.607 138.203 111.052 138.203 84.4635C138.203 57.8747 116.649 36.3201 90.06 36.3201C63.4712 36.3201 41.9167 57.8747 41.9167 84.4635C41.9167 111.052 63.4712 132.607 90.06 132.607Z" fill="#33CC99"/>
+      <path d="M90.0601 113.622C106.164 113.622 119.219 100.567 119.219 84.4635C119.219 68.3597 106.164 55.3049 90.0601 55.3049C73.9562 55.3049 60.9015 68.3597 60.9015 84.4635C60.9015 100.567 73.9562 113.622 90.0601 113.622Z" fill="#FFCC00"/>
+      <path d="M90.06 94.0245C95.3404 94.0245 99.621 89.7439 99.621 84.4635C99.621 79.1831 95.3404 74.9025 90.06 74.9025C84.7797 74.9025 80.4991 79.1831 80.4991 84.4635C80.4991 89.7439 84.7797 94.0245 90.06 94.0245Z" fill="black" stroke="#373435" stroke-width="0.666667" stroke-miterlimit="2.61313"/>
+      <path d="M18.3455 129.112H8.24899V197.566H18.3455V129.112Z" fill="#333300"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M96.8243 167.267H122.554V248.498H109.689C102.614 248.498 96.8243 242.71 96.8243 235.633V167.267Z" fill="#333300"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M83.2948 167.267H57.5651V248.498H70.4299C77.5052 248.498 83.2948 242.71 83.2948 235.633V167.267Z" fill="#333300"/>
+      <path d="M13.2978 198.575C18.3284 198.575 22.4065 194.497 22.4065 189.467C22.4065 184.436 18.3284 180.358 13.2978 180.358C8.26715 180.358 4.18903 184.436 4.18903 189.467C4.18903 194.497 8.26715 198.575 13.2978 198.575Z" fill="#333300"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M13.2978 201.983L4.44715 210.834C2.09958 208.486 0.781494 205.303 0.781494 201.983C0.781494 195.069 6.38516 189.467 13.2978 189.467C20.2104 189.467 25.814 195.07 25.814 201.983C25.814 205.302 24.4949 208.486 22.1484 210.834L13.2978 201.983Z" fill="#66FFCC"/>
+      <path d="M13.2978 186.191C17.4354 186.191 20.7897 182.837 20.7897 178.699C20.7897 174.562 17.4354 171.207 13.2978 171.207C9.16014 171.207 5.80591 174.562 5.80591 178.699C5.80591 182.837 9.16014 186.191 13.2978 186.191Z" fill="#333300"/>
+      <path d="M170.974 129.112H160.877V197.566H170.974V129.112Z" fill="#333300"/>
+      <path d="M165.925 198.575C170.956 198.575 175.034 194.497 175.034 189.467C175.034 184.436 170.956 180.358 165.925 180.358C160.894 180.358 156.816 184.436 156.816 189.467C156.816 194.497 160.894 198.575 165.925 198.575Z" fill="#333300"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M165.925 201.983L157.074 210.834C154.727 208.486 153.409 205.303 153.409 201.983C153.409 195.069 159.012 189.467 165.925 189.467C172.838 189.467 178.441 195.07 178.441 201.983C178.441 205.302 177.122 208.486 174.776 210.834L165.925 201.983Z" fill="#66FFCC"/>
+      <path d="M165.925 186.191C170.063 186.191 173.417 182.837 173.417 178.699C173.417 174.562 170.063 171.207 165.925 171.207C161.787 171.207 158.433 174.562 158.433 178.699C158.433 182.837 161.787 186.191 165.925 186.191Z" fill="#333300"/>
+      <path d="M4.19106 100.96H0V129.112H4.19106V100.96Z" fill="#FFCC00"/>
+      <path d="M180.119 100.96H175.928V129.112H180.119V100.96Z" fill="#FFCC00"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M58.5407 248.498H32.8771C32.8771 234.382 44.4259 222.835 58.5407 222.835V248.498Z" fill="#333300"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M121.376 248.498H147.04C147.04 234.382 135.491 222.835 121.376 222.835V248.498Z" fill="#333300"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M90.06 27.0641C121.761 27.0641 147.459 52.7623 147.459 84.4625C147.459 116.164 121.761 141.862 90.06 141.862C58.3588 141.862 32.6606 116.164 32.6606 84.4625C32.6606 52.7623 58.3588 27.0641 90.06 27.0641Z" fill="#00CCFF" fill-opacity="0.301961"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M77.5448 74.1058C83.8822 74.1058 89.0204 79.243 89.0204 85.5814C89.0204 91.9188 83.8832 97.056 77.5448 97.056C71.2074 97.056 66.0702 91.9188 66.0702 85.5814C66.0702 79.244 71.2074 74.1058 77.5448 74.1058Z" fill="white" fill-opacity="0.501961"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M90.06 27.0641C114.851 27.0641 135.969 42.7795 143.999 64.7917H36.1209C44.1504 42.7805 65.2693 27.0641 90.06 27.0641Z" fill="#33CC99" stroke="#33CC99" stroke-width="4" stroke-miterlimit="2.61313"/>
+      <path d="M90.06 27.0641V6.19513" stroke="#33CC99" stroke-width="4" stroke-miterlimit="2.61313"/>
+      <path d="M90.06 12.3903C93.4815 12.3903 96.2552 9.6166 96.2552 6.19512C96.2552 2.77365 93.4815 0 90.06 0C86.6386 0 83.8649 2.77365 83.8649 6.19512C83.8649 9.6166 86.6386 12.3903 90.06 12.3903Z" fill="#33CC99"/>
+    </svg>
+  </div>
+
+  <!-- Helmet dropping beside robot (hidden until Scene 2) -->
+  <div id="helmet-dropped">
+    <svg width="115" height="142" viewBox="0 0 115 142" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M57.3994 27.0641C89.1007 27.0641 114.799 52.7623 114.799 84.4635C114.799 116.165 89.1007 141.863 57.3994 141.863C25.6982 141.863 0 116.165 0 84.4635C0 52.7623 25.6982 27.0641 57.3994 27.0641Z" fill="#00CCFF" fill-opacity="0.301961"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M44.8842 74.1068C51.2216 74.1068 56.3598 79.244 56.3598 85.5814C56.3598 91.9188 51.2226 97.057 44.8842 97.057C38.5468 97.057 33.4096 91.9198 33.4096 85.5814C33.4096 79.244 38.5468 74.1068 44.8842 74.1068Z" fill="white" fill-opacity="0.501961"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M57.3994 27.0641C82.1901 27.0641 103.308 42.7805 111.339 64.7917H3.46036C11.4898 42.7805 32.6088 27.0641 57.3994 27.0641Z" fill="#33CC99" stroke="#33CC99" stroke-width="4" stroke-miterlimit="2.61313"/>
+      <path d="M57.3994 27.0641V6.19513" stroke="#33CC99" stroke-width="4" stroke-miterlimit="2.61313"/>
+      <path d="M57.3994 12.3903C60.8209 12.3903 63.5946 9.6166 63.5946 6.19513C63.5946 2.77365 60.8209 0 57.3994 0C53.978 0 51.2043 2.77365 51.2043 6.19513C51.2043 9.6166 53.978 12.3903 57.3994 12.3903Z" fill="#33CC99"/>
+    </svg>
+  </div>
+
+  <div id="prompt">Click the UFO</div>
 </div>
 
 <script>
 (function () {
   /* ---- generate stars ---- */
-  const starsEl = document.getElementById('stars');
-  for (let i = 0; i < 120; i++) {
-    const s = document.createElement('div');
+  var starsEl = document.getElementById('stars');
+  for (var i = 0; i < 100; i++) {
+    var s = document.createElement('div');
     s.className = 'star';
-    const size = Math.random() * 2.5 + 0.5;
+    var size = Math.random() * 2 + 0.5;
     s.style.width = size + 'px';
     s.style.height = size + 'px';
     s.style.left = Math.random() * 100 + '%';
     s.style.top = Math.random() * 100 + '%';
-    s.style.animationDelay = (Math.random() * 4).toFixed(2) + 's';
-    s.style.animationDuration = (Math.random() * 2 + 2).toFixed(2) + 's';
+    s.style.animationDelay = (Math.random() * 5).toFixed(2) + 's';
+    s.style.animationDuration = (Math.random() * 3 + 2).toFixed(2) + 's';
     starsEl.appendChild(s);
   }
 
   /* ---- refs ---- */
-  const stage   = document.getElementById('stage');
-  const ufo     = document.getElementById('ufo');
-  const robot   = document.getElementById('robot');
-  const earth   = document.getElementById('earth');
-  const helmet  = document.getElementById('helmet');
-  const prompt1 = document.getElementById('prompt1');
-  const prompt2 = document.getElementById('prompt2');
-  const choices = document.getElementById('choices');
-  const btnWear  = document.getElementById('btnWear');
-  const btnLeave = document.getElementById('btnLeave');
+  var ufoGroup      = document.getElementById('ufo-group');
+  var robotInside   = document.getElementById('robot-inside');
+  var helmetOn      = document.getElementById('helmet-on');
+  var earth         = document.getElementById('earth');
+  var robotLanded   = document.getElementById('robot-landed');
+  var helmetDropped = document.getElementById('helmet-dropped');
+  var prompt        = document.getElementById('prompt');
 
-  let scene = 0; // 0 = idle, 1 = arrival, 2 = choice
+  var scene = 1; // 1 = in space, 2 = on earth
 
-  /* ---- show first prompt after a beat ---- */
-  setTimeout(() => { prompt1.classList.add('show'); }, 600);
+  /* show prompt */
+  setTimeout(function () { prompt.classList.add('show'); }, 500);
 
-  /* ---- Scene 1 trigger: click anywhere ---- */
-  stage.addEventListener('click', function onScene1(e) {
-    if (scene !== 0) return;
-    // ignore clicks on earth / buttons during scene 0
-    scene = 1;
-    prompt1.classList.remove('show');
+  /* ---- Click UFO ---- */
+  ufoGroup.addEventListener('click', function () {
 
-    // UFO floats in
-    ufo.classList.add('arrive');
+    /* ---- Scene 1 click: Earth rises ---- */
+    if (scene === 1) {
+      scene = 'transitioning';
+      prompt.classList.remove('show');
 
-    // after UFO arrives, add hover + slight robot turn
-    setTimeout(() => {
-      ufo.classList.add('hover');
-      robot.classList.add('turn');
-      earth.classList.add('glow');
-      prompt2.classList.add('show');
-    }, 1300);
-  });
+      earth.classList.add('visible');
 
-  /* ---- Scene 2 trigger: click the Earth ---- */
-  earth.addEventListener('click', function onScene2(e) {
-    if (scene !== 1) return;
-    e.stopPropagation();
-    scene = 2;
-    prompt2.classList.remove('show');
+      /* after earth settles, update prompt */
+      setTimeout(function () {
+        scene = 2;
+        prompt.textContent = 'Click the UFO again';
+        prompt.classList.add('show');
+      }, 2200);
+      return;
+    }
 
-    // brighten background
-    stage.classList.add('bright');
+    /* ---- Scene 2 click: Robot lands, UFO exits ---- */
+    if (scene === 2) {
+      scene = 'done';
+      prompt.classList.remove('show');
 
-    // robot walks toward earth
-    robot.classList.remove('turn');
-    robot.classList.add('move-to-earth');
+      /* hide robot + helmet inside UFO */
+      robotInside.style.transition = 'opacity 0.4s ease';
+      robotInside.style.opacity = '0';
+      helmetOn.style.transition = 'opacity 0.4s ease';
+      helmetOn.style.opacity = '0';
 
-    // ufo fades out upward
-    ufo.classList.remove('hover');
-    ufo.classList.add('fade-out');
+      /* show landed robot */
+      robotLanded.classList.add('show');
 
-    // show choice buttons
-    setTimeout(() => { choices.classList.add('show'); }, 1600);
-  });
+      /* UFO exits upward */
+      setTimeout(function () {
+        ufoGroup.classList.add('exit-up');
+      }, 600);
 
-  /* ---- Choice: wear helmet ---- */
-  btnWear.addEventListener('click', function (e) {
-    e.stopPropagation();
-    choices.classList.remove('show');
-    helmet.classList.add('on-head');
-  });
+      /* helmet sequence: lift off head, then drop beside */
+      setTimeout(function () {
+        helmetDropped.classList.add('lift');
+      }, 1400);
 
-  /* ---- Choice: leave helmet ---- */
-  btnLeave.addEventListener('click', function (e) {
-    e.stopPropagation();
-    choices.classList.remove('show');
-    helmet.classList.add('left-behind');
+      setTimeout(function () {
+        helmetDropped.classList.remove('lift');
+        helmetDropped.classList.add('drop');
+      }, 2400);
+    }
   });
 })();
 </script>
