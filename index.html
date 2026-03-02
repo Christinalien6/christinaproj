@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: black;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #bg {
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: opacity 0.6s ease;
+    }
+
+    #text {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #text p {
+      color: white;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(1.2rem, 3vw, 2rem);
+      text-shadow:
+        0 0 12px rgba(0,0,0,0.9),
+        0 2px 8px rgba(0,0,0,0.8),
+        0 0 40px rgba(0,0,0,0.6);
+      max-width: 700px;
+      line-height: 1.6;
+      letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="bg"></div>
+  <div id="text"><p id="msg"></p></div>
+
+  <script>
+    const bg = document.getElementById('bg');
+    const textEl = document.getElementById('text');
+    const msg = document.getElementById('msg');
+
+    let step = 0;
+    let clickable = false;
+
+    function setBackground(src) {
+      if (src) {
+        bg.style.backgroundImage = `url('assets/${src}')`;
+      } else {
+        bg.style.backgroundImage = 'none';
+      }
+    }
+
+    function fadeInText(text) {
+      return new Promise(resolve => {
+        msg.textContent = text;
+        // Force reflow then fade in
+        textEl.style.transition = 'none';
+        textEl.style.opacity = '0';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          textEl.style.transition = 'opacity 0.8s ease';
+          textEl.style.opacity = '1';
+          setTimeout(resolve, 900);
+        }));
+      });
+    }
+
+    function fadeOutText() {
+      return new Promise(resolve => {
+        textEl.style.transition = 'opacity 0.8s ease';
+        textEl.style.opacity = '0';
+        setTimeout(resolve, 850);
+      });
+    }
+
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Step handlers — each returns a promise that resolves when the step is done
+    // (either after a timeout, or after a click)
+    function waitForClick() {
+      return new Promise(resolve => {
+        clickable = true;
+        function handler() {
+          if (!clickable) return;
+          clickable = false;
+          document.removeEventListener('click', handler);
+          resolve();
+        }
+        document.addEventListener('click', handler);
+      });
+    }
+
+    async function run() {
+      // ── Step 1: Black screen intro ──────────────────────────────────────────
+      await fadeInText("I don't remember what the room looked like. Can you help me recover the memory?");
+      await wait(2000);
+      await fadeOutText();
+
+      // ── Step 2: roomdark — click the candle ─────────────────────────────────
+      setBackground('roomdark.png');
+      await fadeInText("Click the candle.");
+      await waitForClick();
+      setBackground('roomlight1.png');
+      await fadeOutText();
+
+      // ── Step 3: clock — click the clock ─────────────────────────────────────
+      await fadeInText("Click the clock.");
+      await waitForClick();
+      setBackground('clock2.png');
+      await wait(500);
+      setBackground('clock3.png');
+      await wait(500);
+      await fadeOutText();
+
+      // ── Step 4: door — knock on the door ────────────────────────────────────
+      await fadeInText("Knock on the door.");
+      await waitForClick();
+      setBackground('dooropen.png');
+      await fadeOutText();
+
+      // ── Step 5: light — click the light ─────────────────────────────────────
+      await fadeInText("Click the light.");
+      await waitForClick();
+      setBackground('lighton.png');
+      await wait(2000);
+
+      // ── Step 6: room — final scene ───────────────────────────────────────────
+      setBackground('room.png');
+      await fadeInText("Thank you for helping me remember.");
+    }
+
+    run();
+  </script>
+</body>
+</html>
