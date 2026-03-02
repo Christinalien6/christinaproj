@@ -5,157 +5,190 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Memory</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      background: black;
+      background: #000;
       cursor: pointer;
       user-select: none;
     }
 
-    #bg {
+    /* Two image layers stacked — bottom holds the current image,
+       top fades in the next image over it (no black flash). */
+    .bg-layer {
       position: fixed;
       inset: 0;
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      transition: opacity 0.6s ease;
     }
 
-    #text {
+    #bg-bottom { z-index: 1; }
+    #bg-top    { z-index: 2; opacity: 0; }
+
+    /* Text lives above both image layers and never touches them. */
+    #text-layer {
       position: fixed;
       inset: 0;
+      z-index: 10;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
       padding: 2rem;
       opacity: 0;
-      transition: opacity 0.8s ease;
       pointer-events: none;
-      z-index: 10;
     }
 
-    #text p {
+    #text-layer p {
       color: white;
       font-family: Georgia, 'Times New Roman', serif;
       font-size: clamp(1.2rem, 3vw, 2rem);
       text-shadow:
-        0 0 12px rgba(0,0,0,0.9),
-        0 2px 8px rgba(0,0,0,0.8),
-        0 0 40px rgba(0,0,0,0.6);
-      max-width: 700px;
-      line-height: 1.6;
+        0 0 14px rgba(0,0,0,1),
+        0 2px 8px  rgba(0,0,0,0.9),
+        0 0 40px   rgba(0,0,0,0.7);
+      max-width: 680px;
+      line-height: 1.65;
       letter-spacing: 0.03em;
     }
   </style>
 </head>
 <body>
 
-  <div id="bg"></div>
-  <div id="text"><p id="msg"></p></div>
+  <div id="bg-bottom" class="bg-layer"></div>
+  <div id="bg-top"    class="bg-layer"></div>
+  <div id="text-layer"><p id="msg"></p></div>
 
   <script>
-    const bg = document.getElementById('bg');
-    const textEl = document.getElementById('text');
-    const msg = document.getElementById('msg');
+    const bottom    = document.getElementById('bg-bottom');
+    const top       = document.getElementById('bg-top');
+    const textLayer = document.getElementById('text-layer');
+    const msg       = document.getElementById('msg');
 
-    let step = 0;
-    let clickable = false;
+    const FADE_MS = 800;   // crossfade / text-fade duration (ms)
 
-    function setBackground(src) {
-      if (src) {
-        bg.style.backgroundImage = `url('assets/${src}')`;
-      } else {
-        bg.style.backgroundImage = 'none';
-      }
-    }
+    // Clicks are locked during every transition.
+    let locked       = true;
+    let clickResolve = null;
 
-    function fadeInText(text) {
+    // ── Utilities ──────────────────────────────────────────────────────────────
+
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const src  = name => `assets/${name}`;
+
+    // ── Image crossfade ────────────────────────────────────────────────────────
+    // Fades the new image in over the current one. Never touches background:black.
+    function crossfade(imgName) {
       return new Promise(resolve => {
-        msg.textContent = text;
-        // Force reflow then fade in
-        textEl.style.transition = 'none';
-        textEl.style.opacity = '0';
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          textEl.style.transition = 'opacity 0.8s ease';
-          textEl.style.opacity = '1';
-          setTimeout(resolve, 900);
-        }));
+        // Place new image on the top layer while it is invisible.
+        top.style.transition     = 'none';
+        top.style.opacity        = '0';
+        top.style.backgroundImage = `url('${src(imgName)}')`;
+
+        // Force layout so the next transition actually fires.
+        top.offsetHeight; // eslint-disable-line no-unused-expressions
+
+        // Fade the new image in.
+        top.style.transition = `opacity ${FADE_MS}ms ease`;
+        top.style.opacity    = '1';
+
+        setTimeout(() => {
+          // Promote the new image to the permanent bottom layer,
+          // then silently reset the top layer (no visible change).
+          bottom.style.backgroundImage = `url('${src(imgName)}')`;
+          top.style.transition         = 'none';
+          top.style.opacity            = '0';
+          resolve();
+        }, FADE_MS + 60);
       });
     }
 
-    function fadeOutText() {
+    // ── Text helpers ───────────────────────────────────────────────────────────
+
+    function showText(text) {
       return new Promise(resolve => {
-        textEl.style.transition = 'opacity 0.8s ease';
-        textEl.style.opacity = '0';
-        setTimeout(resolve, 850);
+        msg.textContent          = text;
+        textLayer.style.transition = `opacity ${FADE_MS}ms ease`;
+        textLayer.style.opacity  = '1';
+        setTimeout(resolve, FADE_MS + 60);
       });
     }
 
-    function wait(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
+    function hideText() {
+      return new Promise(resolve => {
+        textLayer.style.transition = `opacity ${FADE_MS}ms ease`;
+        textLayer.style.opacity    = '0';
+        setTimeout(resolve, FADE_MS + 60);
+      });
     }
 
-    // Step handlers — each returns a promise that resolves when the step is done
-    // (either after a timeout, or after a click)
+    // ── Click gate ─────────────────────────────────────────────────────────────
+
+    document.addEventListener('click', () => {
+      if (locked || !clickResolve) return;
+      locked = true;                  // lock immediately — one click, one step
+      const resolve = clickResolve;
+      clickResolve  = null;
+      resolve();
+    });
+
     function waitForClick() {
       return new Promise(resolve => {
-        clickable = true;
-        function handler() {
-          if (!clickable) return;
-          clickable = false;
-          document.removeEventListener('click', handler);
-          resolve();
-        }
-        document.addEventListener('click', handler);
+        clickResolve = resolve;
+        locked       = false;         // unlock only after resolver is registered
       });
     }
 
+    // ── Sequence ───────────────────────────────────────────────────────────────
+
     async function run() {
-      // ── Step 1: Black screen intro ──────────────────────────────────────────
-      await fadeInText("I don't remember what the room looked like. Can you help me recover the memory?");
+      // Preload every image so crossfades are instant.
+      ['roomdark.png','roomlight1.png','clock2.png','clock3.png',
+       'dooropen.png','lighton.png','room.png']
+        .forEach(name => { new Image().src = src(name); });
+
+      // 1. roomdark immediately → wait 3s → text → click
+      bottom.style.backgroundImage = `url('${src('roomdark.png')}')`;
+      await wait(3000);
+      await showText("I don't remember what the room looked like. Can you help me recover the memory?");
+      await waitForClick();
+
+      // 2. crossfade roomlight1 → wait 3s → text → click
+      await Promise.all([hideText(), crossfade('roomlight1.png')]);
+      await wait(3000);
+      await showText("Click the clock.");
+      await waitForClick();
+
+      // 3. crossfade clock2 → wait 3s → text → click
+      await Promise.all([hideText(), crossfade('clock2.png')]);
+      await wait(3000);
+      await showText("Click the clock.");
+      await waitForClick();
+
+      // 4. crossfade clock3 → wait 3s → text → click
+      await Promise.all([hideText(), crossfade('clock3.png')]);
+      await wait(3000);
+      await showText("Knock on the door.");
+      await waitForClick();
+
+      // 5. crossfade dooropen → wait 3s → text → click
+      await Promise.all([hideText(), crossfade('dooropen.png')]);
+      await wait(3000);
+      await showText("Click the light.");
+      await waitForClick();
+
+      // 6. crossfade lighton (no text) → hold 2s → crossfade room
+      await Promise.all([hideText(), crossfade('lighton.png')]);
       await wait(2000);
-      await fadeOutText();
+      await crossfade('room.png');
 
-      // ── Step 2: roomdark — click the candle ─────────────────────────────────
-      setBackground('roomdark.png');
-      await fadeInText("Click the candle.");
-      await waitForClick();
-      setBackground('roomlight1.png');
-      await fadeOutText();
-
-      // ── Step 3: clock — click the clock ─────────────────────────────────────
-      await fadeInText("Click the clock.");
-      await waitForClick();
-      setBackground('clock2.png');
-      await wait(500);
-      setBackground('clock3.png');
-      await wait(500);
-      await fadeOutText();
-
-      // ── Step 4: door — knock on the door ────────────────────────────────────
-      await fadeInText("Knock on the door.");
-      await waitForClick();
-      setBackground('dooropen.png');
-      await fadeOutText();
-
-      // ── Step 5: light — click the light ─────────────────────────────────────
-      await fadeInText("Click the light.");
-      await waitForClick();
-      setBackground('lighton.png');
-      await wait(2000);
-
-      // ── Step 6: room — final scene ───────────────────────────────────────────
-      setBackground('room.png');
-      await fadeInText("Thank you for helping me remember.");
+      // 7. wait 3s → final text (no more clicks needed)
+      await wait(3000);
+      await showText("Thank you for helping me remember.");
     }
 
     run();
