@@ -16,8 +16,6 @@
       user-select: none;
     }
 
-    /* Two image layers stacked — bottom holds the current image,
-       top fades in the next image over it (no black flash). */
     .bg-layer {
       position: fixed;
       inset: 0;
@@ -29,7 +27,6 @@
     #bg-bottom { z-index: 1; }
     #bg-top    { z-index: 2; opacity: 0; }
 
-    /* Text lives above both image layers and never touches them. */
     #text-layer {
       position: fixed;
       inset: 0;
@@ -56,6 +53,29 @@
       line-height: 1.65;
       letter-spacing: 0.03em;
     }
+
+    #restart-btn {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 20;
+      background: rgba(0, 0, 0, 0.45);
+      color: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 6px;
+      padding: 0.45rem 1.1rem;
+      font-family: Georgia, serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    #restart-btn:hover {
+      background: rgba(0, 0, 0, 0.72);
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -63,58 +83,52 @@
   <div id="bg-bottom" class="bg-layer"></div>
   <div id="bg-top"    class="bg-layer"></div>
   <div id="text-layer"><p id="msg"></p></div>
+  <button id="restart-btn">↺ Restart</button>
 
   <script>
-    const bottom    = document.getElementById('bg-bottom');
-    const top       = document.getElementById('bg-top');
-    const textLayer = document.getElementById('text-layer');
-    const msg       = document.getElementById('msg');
+    const bottom     = document.getElementById('bg-bottom');
+    const top        = document.getElementById('bg-top');
+    const textLayer  = document.getElementById('text-layer');
+    const msg        = document.getElementById('msg');
+    const restartBtn = document.getElementById('restart-btn');
 
-    const FADE_MS = 800;   // crossfade / text-fade duration (ms)
+    const FADE_MS = 800;
 
-    // Clicks are locked during every transition.
     let locked       = true;
     let clickResolve = null;
-
-    // ── Utilities ──────────────────────────────────────────────────────────────
+    let gen          = 0;   // incremented on each run(); old runs check this to bail out
 
     const wait = ms => new Promise(r => setTimeout(r, ms));
     const src  = name => `assets/${name}`;
 
-    // ── Image crossfade ────────────────────────────────────────────────────────
-    // Fades the new image in over the current one. Never touches background:black.
-    function crossfade(imgName) {
+    // ── Crossfade ─────────────────────────────────────────────────────────────
+    // Takes the current generation (g) so it skips the bottom-layer promotion
+    // if a restart happened while the fade was in flight.
+    function crossfade(imgName, g) {
       return new Promise(resolve => {
-        // Place new image on the top layer while it is invisible.
-        top.style.transition     = 'none';
-        top.style.opacity        = '0';
+        top.style.transition      = 'none';
+        top.style.opacity         = '0';
         top.style.backgroundImage = `url('${src(imgName)}')`;
-
-        // Force layout so the next transition actually fires.
-        top.offsetHeight; // eslint-disable-line no-unused-expressions
-
-        // Fade the new image in.
+        top.offsetHeight; // force reflow
         top.style.transition = `opacity ${FADE_MS}ms ease`;
         top.style.opacity    = '1';
-
         setTimeout(() => {
-          // Promote the new image to the permanent bottom layer,
-          // then silently reset the top layer (no visible change).
-          bottom.style.backgroundImage = `url('${src(imgName)}')`;
-          top.style.transition         = 'none';
-          top.style.opacity            = '0';
+          if (g === gen) {
+            bottom.style.backgroundImage = `url('${src(imgName)}')`;
+            top.style.transition         = 'none';
+            top.style.opacity            = '0';
+          }
           resolve();
         }, FADE_MS + 60);
       });
     }
 
-    // ── Text helpers ───────────────────────────────────────────────────────────
-
+    // ── Text ──────────────────────────────────────────────────────────────────
     function showText(text) {
       return new Promise(resolve => {
-        msg.textContent          = text;
+        msg.textContent            = text;
         textLayer.style.transition = `opacity ${FADE_MS}ms ease`;
-        textLayer.style.opacity  = '1';
+        textLayer.style.opacity    = '1';
         setTimeout(resolve, FADE_MS + 60);
       });
     }
@@ -127,11 +141,10 @@
       });
     }
 
-    // ── Click gate ─────────────────────────────────────────────────────────────
-
+    // ── Click gate ────────────────────────────────────────────────────────────
     document.addEventListener('click', () => {
       if (locked || !clickResolve) return;
-      locked = true;                  // lock immediately — one click, one step
+      locked = true;
       const resolve = clickResolve;
       clickResolve  = null;
       resolve();
@@ -140,57 +153,77 @@
     function waitForClick() {
       return new Promise(resolve => {
         clickResolve = resolve;
-        locked       = false;         // unlock only after resolver is registered
+        locked       = false;
       });
     }
 
-    // ── Sequence ───────────────────────────────────────────────────────────────
-
+    // ── Main sequence ─────────────────────────────────────────────────────────
     async function run() {
-      // Preload every image so crossfades are instant.
+      const g  = ++gen;
+      const ok = () => g === gen;  // false if a newer run has started
+
+      // Lock clicks and kill any pending click resolver from the old run.
+      locked       = true;
+      clickResolve = null;
+
+      // Snap layers back to a clean state immediately (no transition).
+      textLayer.style.transition = 'none';
+      textLayer.style.opacity    = '0';
+      top.style.transition       = 'none';
+      top.style.opacity          = '0';
+
+      // Preload images.
       ['roomdark.png','roomlight1.png','clock2.png','clock3.png',
        'dooropen.png','lighton.png','room.png']
         .forEach(name => { new Image().src = src(name); });
 
-      // 1. roomdark immediately → wait 3s → text → click
+      // 1. roomdark immediately → 3s → text → click
       bottom.style.backgroundImage = `url('${src('roomdark.png')}')`;
-      await wait(3000);
+      await wait(3000);                                              if (!ok()) return;
       await showText("I don't remember what the room looked like. Can you help me recover the memory?");
-      await waitForClick();
+                                                                     if (!ok()) return;
+      await waitForClick();                                          if (!ok()) return;
 
-      // 2. crossfade roomlight1 → wait 3s → text → click
-      await Promise.all([hideText(), crossfade('roomlight1.png')]);
-      await wait(3000);
-      await showText("Click the clock.");
-      await waitForClick();
+      // 2. → roomlight1 → 3s → text → click
+      await Promise.all([hideText(), crossfade('roomlight1.png', g)]); if (!ok()) return;
+      await wait(3000);                                              if (!ok()) return;
+      await showText("Click the clock.");                            if (!ok()) return;
+      await waitForClick();                                          if (!ok()) return;
 
-      // 3. crossfade clock2 → wait 3s → text → click
-      await Promise.all([hideText(), crossfade('clock2.png')]);
-      await wait(3000);
-      await showText("Click the clock.");
-      await waitForClick();
+      // 3. → clock2 → 3s → text → click
+      await Promise.all([hideText(), crossfade('clock2.png', g)]);  if (!ok()) return;
+      await wait(3000);                                              if (!ok()) return;
+      await showText("Click the clock.");                            if (!ok()) return;
+      await waitForClick();                                          if (!ok()) return;
 
-      // 4. crossfade clock3 → wait 3s → text → click
-      await Promise.all([hideText(), crossfade('clock3.png')]);
-      await wait(3000);
-      await showText("Knock on the door.");
-      await waitForClick();
+      // 4. → clock3 → 3s → text → click
+      await Promise.all([hideText(), crossfade('clock3.png', g)]);  if (!ok()) return;
+      await wait(3000);                                              if (!ok()) return;
+      await showText("Knock on the door.");                          if (!ok()) return;
+      await waitForClick();                                          if (!ok()) return;
 
-      // 5. crossfade dooropen → wait 3s → text → click
-      await Promise.all([hideText(), crossfade('dooropen.png')]);
-      await wait(3000);
-      await showText("Click the light.");
-      await waitForClick();
+      // 5. → dooropen → 3s → text → click
+      await Promise.all([hideText(), crossfade('dooropen.png', g)]); if (!ok()) return;
+      await wait(3000);                                              if (!ok()) return;
+      await showText("Click the light.");                            if (!ok()) return;
+      await waitForClick();                                          if (!ok()) return;
 
-      // 6. crossfade lighton (no text) → hold 2s → crossfade room
-      await Promise.all([hideText(), crossfade('lighton.png')]);
-      await wait(2000);
-      await crossfade('room.png');
+      // 6. → lighton (no text) → 2s → room
+      await Promise.all([hideText(), crossfade('lighton.png', g)]);  if (!ok()) return;
+      await wait(2000);                                              if (!ok()) return;
+      await crossfade('room.png', g);                                if (!ok()) return;
 
-      // 7. wait 3s → final text (no more clicks needed)
-      await wait(3000);
+      // 7. → 3s → final text
+      await wait(3000);                                              if (!ok()) return;
       await showText("Thank you for helping me remember.");
     }
+
+    // Restart button: stop the click from bubbling to the document handler,
+    // then restart the sequence from the beginning.
+    restartBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      run();
+    });
 
     run();
   </script>
